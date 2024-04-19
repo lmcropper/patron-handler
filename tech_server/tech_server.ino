@@ -13,7 +13,10 @@
 #define MESSAGE_ATTEMPTS 3
 #define MAX_RECIEVERS 20
 
+#define CALL_CODE 0xF6
+
 //#define DEBUG_PACKETS
+//#define DEBUG_SERIAL
 
 // Pin Numbers
 const int red_led_pin = 18;
@@ -62,6 +65,10 @@ bool send_command(uint8_t, int, int);
 uint8_t registerNewReceiver(const uint8_t*);
 bool callNextReceiver();
 
+// Communication
+void send_frontend_serial_packet(uint8_t*, uint8_t);
+void send_frontend_byte(uint8_t c);
+
 void setup() {
   
   // Start Serial Comms
@@ -85,7 +92,9 @@ void setup() {
 
   // Init ESP-NOW
   if (esp_now_init() != ESP_OK) {
+    #ifdef SERIAL_DEBUG
     Serial.println("Error initializing ESP-NOW");
+    #endif
     return;
   }
 
@@ -118,7 +127,7 @@ void loop() {
   switch (server_state)
   {
     case IDLE:
-      if (button_call.pressed())
+      if (button_call.pressed() || (Serial.available() && Serial.read() == CALL_CODE))
       {
         // Start a new calling rotation
         attempted_receivers = 0;
@@ -131,7 +140,9 @@ void loop() {
         {
           server_state = CALLING;
           delayCounter = 0;
+          #ifdef SERIAL_DEBUG
           Serial.println("Entering CALLING");
+          #endif
 
           // Blink the yellow led
           yellowLed.on();
@@ -143,7 +154,9 @@ void loop() {
         {
           server_state = NO_HELP;
           delayCounter = 0;
+          #ifdef SERIAL_DEBUG
           Serial.println("Entering NO_HELP");
+          #endif
 
           // Blink all the leds
           yellowLed.on();
@@ -159,7 +172,16 @@ void loop() {
       {
         server_state = ACKED;
         delayCounter = 0;
+        #ifdef SERIAL_DEBUG
         Serial.println("Accepted --> Entering ACKED");
+        #endif
+
+        // Log the accepted state on the front end
+        uint8_t out_buf[] = {10, last_receiver_addr, 4};
+        send_frontend_serial_packet(out_buf, 3);
+
+        // Release Front end
+        send_frontend_byte(20);
 
         // Turn on the green led
         greenLed.on();
@@ -169,11 +191,17 @@ void loop() {
       // Timer expires
       else if (delayCounter >= WAIT_TIME_MS || callRefusedFlag)
       {
+        // Log the rejected state on the front end
+        uint8_t out_buf[] = {10, last_receiver_addr, 5};
+        send_frontend_serial_packet(out_buf, 3);
+          
         // If theres someone else
         if (callNextReceiver())
         {
           delayCounter = 0;
+          #ifdef SERIAL_DEBUG
           Serial.println("Refused/Expired --> Restart CALLING");
+          #endif
 
           // Blink the yellow led
           yellowLed.on();
@@ -185,6 +213,7 @@ void loop() {
         {
           server_state = REFUSED;
           delayCounter = 0;
+          #ifdef SERIAL_DEBUG
           Serial.println("Entering REFUSED");
           Serial.print("Paged ");
           Serial.print(paged_receivers);
@@ -192,6 +221,10 @@ void loop() {
           Serial.print(" (");
           Serial.print(registered_receivers);
           Serial.println(" registered)");
+          #endif
+
+          // Release Front end
+          send_frontend_byte(20);
 
           // Inc so the same person isn't paged first again
           receiver_trace_ndx = (receiver_trace_ndx + 1) % registered_receivers;     
@@ -209,7 +242,12 @@ void loop() {
       if (delayCounter >= ERROR_BLINK_MS)
       {
         server_state = IDLE;
+        #ifdef SERIAL_DEBUG
         Serial.println("Back to IDLE");
+        #endif
+
+        // Release Front end
+        send_frontend_byte(20);
 
         // Turn off all leds
         yellowLed.off();
@@ -223,7 +261,9 @@ void loop() {
       if (delayCounter >= STATUS_DISPLAY_MS)
       {
         server_state = IDLE;
+        #ifdef SERIAL_DEBUG
         Serial.println("Back to IDLE");
+        #endif
 
         // Turn off all leds
         yellowLed.off();
@@ -233,7 +273,9 @@ void loop() {
       break;
 
     default:
+      #ifdef SERIAL_DEBUG
       Serial.println("Bad State Error");
+      #endif
       break;
   }
 
@@ -270,7 +312,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 // Callback when data is received
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   #ifdef DEBUG_PACKETS
-  Serial.print("Bytes received: ");
+  Serial.print("Bytes received: "); 
   Serial.println(len);
   #endif
 
@@ -377,13 +419,22 @@ uint8_t registerNewReceiver(const uint8_t* macAddr)
   
   // Add peer        
   if (esp_now_add_peer(&(peerInfo[registered_receivers])) != ESP_OK){
+    #ifdef SERIAL_DEBUG
     Serial.println("Failed to add peer");
+    #endif
     return 255;
   }
   else
   {
+    #ifdef SERIAL_DEBUG
     Serial.print("Registered new peer #");
     Serial.println(registered_receivers);
+    #endif
+
+    // Report back to front end
+    uint8_t out_buf[] = {30, registered_receivers, 'T', 'E', 'C', 'H', '_', (char)('0' + registered_receivers)};
+    send_frontend_serial_packet(out_buf, 8);
+    
   }
 
   // Increment the registered reciever count
@@ -403,12 +454,23 @@ bool callNextReceiver()
   if (attempted_receivers == registered_receivers) return false;
   
   // Send Page Command to receiver
+  #ifdef SERIAL_DEBUG
   Serial.print("Calling peer ");
   Serial.println(receiver_trace_ndx);
+  #endif
   bool received = send_command(receiver_trace_ndx, COMMAND_PAGE, MESSAGE_ATTEMPTS);
   
-  if (received) paged_receivers++;
+  if (received)
+  {
+    paged_receivers++;
+
+    // Log the calling state on the front end
+    uint8_t out_buf[] = {10, receiver_trace_ndx, 3};
+    send_frontend_serial_packet(out_buf, 3);
+  }
+  #ifdef SERIAL_DEBUG
   else Serial.println("Peer cannot be reached");
+  #endif
 
   // Move to next receiver in the line up
   last_receiver_addr = receiver_trace_ndx;
@@ -431,4 +493,18 @@ String getMacString(uint8_t* memloc)
     if (i < 5) str += ":";
   }
   return str;
+}
+
+void send_frontend_serial_packet(uint8_t* payload, uint8_t byte_cnt)
+{
+  Serial.write("ELC"); // Denote the start of a comm packet
+  Serial.write(byte_cnt); // How many bytes to read
+  Serial.write(payload, byte_cnt);
+}
+
+void send_frontend_byte(uint8_t c)
+{
+  Serial.write("ELC"); // Denote the start of a comm packet
+  Serial.write(1); // How many bytes to read
+  Serial.write(c);
 }
