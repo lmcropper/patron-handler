@@ -11,9 +11,12 @@
 #define ERROR_BLINK_MS 1000
 #define STATUS_DISPLAY_MS 2000
 #define MESSAGE_ATTEMPTS 3
-#define MAX_RECIEVERS 20
+#define MAX_RECEIVERS 20
+#define INACTIVE_PING_THRESH 3000
+#define DEAD_PING_THRESH 10000
 
 #define CALL_CODE 0xF6
+#define START_BYTE 40
 
 //#define DEBUG_PACKETS
 //#define DEBUG_SERIAL
@@ -52,7 +55,8 @@ long currentTime, prevTime, deltaTime;
 #define COMMAND_ACCEPT  3
 #define COMMAND_REFUSE  4
 #define COMMAND_CONN    5
-uint8_t broadcastAddress[MAX_RECIEVERS][6];
+uint8_t broadcastAddress[MAX_RECEIVERS][6];
+uint32_t last_ping[MAX_RECEIVERS];
 uint8_t registered_receivers = 0;
 
 // Helpful Functions
@@ -66,6 +70,7 @@ uint8_t registerNewReceiver(const uint8_t*);
 bool callNextReceiver();
 
 // Communication
+void update_tech_status(uint8_t, uint8_t);
 void send_frontend_serial_packet(uint8_t*, uint8_t);
 void send_frontend_byte(uint8_t c);
 
@@ -108,6 +113,8 @@ void setup() {
   redLed.off();
   yellowLed.off();
   greenLed.off();
+
+  send_frontend_byte(START_BYTE);
 }
 
 void loop() {
@@ -116,8 +123,8 @@ void loop() {
   currentTime = millis();
   deltaTime = currentTime - prevTime;
 
-  // Send health check commands out
-  if (health_check_device_flag < MAX_RECIEVERS)
+  // Send health check commands out, respond to their connection requests
+  if (health_check_device_flag < MAX_RECEIVERS)
   {
     send_command(health_check_device_flag, COMMAND_CONN, MESSAGE_ATTEMPTS);
     health_check_device_flag = 255;
@@ -177,8 +184,7 @@ void loop() {
         #endif
 
         // Log the accepted state on the front end
-        uint8_t out_buf[] = {10, last_receiver_addr, 4};
-        send_frontend_serial_packet(out_buf, 3);
+        update_tech_status(last_receiver_addr, 4);
 
         // Release Front end
         send_frontend_byte(20);
@@ -188,12 +194,12 @@ void loop() {
         redLed.off();
         yellowLed.off();
       }
-      // Timer expires
-      else if (delayCounter >= WAIT_TIME_MS || callRefusedFlag)
+      // Timer expires or pager went dead
+      else if (delayCounter >= WAIT_TIME_MS || callRefusedFlag || last_ping[last_receiver_addr] > INACTIVE_PING_THRESH)
       {
-        // Log the rejected state on the front end
-        uint8_t out_buf[] = {10, last_receiver_addr, 5};
-        send_frontend_serial_packet(out_buf, 3);
+        // Log the rejected state on the front end if still online
+        if (last_ping[last_receiver_addr] < INACTIVE_PING_THRESH)
+          update_tech_status(last_receiver_addr, 5);
           
         // If theres someone else
         if (callNextReceiver())
@@ -295,6 +301,22 @@ void loop() {
 
   // Timing
   prevTime = currentTime;
+
+  // Update the ping table
+  for (uint8_t i = 0; i < registered_receivers; i++)
+  {
+    last_ping[i] += deltaTime;
+    if (last_ping[i] >= INACTIVE_PING_THRESH && last_ping[i] - deltaTime < INACTIVE_PING_THRESH)
+    {
+      // Log the unavailable state on the front end
+      update_tech_status(i, 1);
+    }
+    else if (last_ping[i] >= DEAD_PING_THRESH && last_ping[i] - deltaTime < DEAD_PING_THRESH)
+    {
+      // Log the error state on the front end
+      update_tech_status(i, 0);
+    }
+  }
   
 }
 
@@ -391,6 +413,7 @@ bool send_command(uint8_t device_id, int command, int attempts)
 
 uint8_t registerNewReceiver(const uint8_t* macAddr)
 {
+
   // Record the new address
   memcpy(&(broadcastAddress[registered_receivers]), macAddr, 6);
 
@@ -408,6 +431,15 @@ uint8_t registerNewReceiver(const uint8_t* macAddr)
       #ifdef DEBUG_PACKETS
       Serial.println("Already Registered");
       #endif
+
+      // Update the ping time
+      if (last_ping[i] > INACTIVE_PING_THRESH)
+      {
+        // Update to available state on the front end
+        update_tech_status(i, 2);
+      }
+      // Reset
+      last_ping[i] = 0;
       return i;
     }
   }
@@ -465,12 +497,17 @@ bool callNextReceiver()
     paged_receivers++;
 
     // Log the calling state on the front end
-    uint8_t out_buf[] = {10, receiver_trace_ndx, 3};
-    send_frontend_serial_packet(out_buf, 3);
+    update_tech_status(receiver_trace_ndx, 3);
   }
-  #ifdef SERIAL_DEBUG
-  else Serial.println("Peer cannot be reached");
-  #endif
+  else
+  {
+    // Log the unavailable state on the front end
+    update_tech_status(receiver_trace_ndx, 1);
+    
+    #ifdef SERIAL_DEBUG
+    Serial.println("Peer cannot be reached");
+    #endif
+  }
 
   // Move to next receiver in the line up
   last_receiver_addr = receiver_trace_ndx;
@@ -493,6 +530,12 @@ String getMacString(uint8_t* memloc)
     if (i < 5) str += ":";
   }
   return str;
+}
+
+void update_tech_status(uint8_t tech_index, uint8_t new_state)
+{
+  uint8_t out_buf[] = {10, tech_index, new_state};
+  send_frontend_serial_packet(out_buf, 3);
 }
 
 void send_frontend_serial_packet(uint8_t* payload, uint8_t byte_cnt)

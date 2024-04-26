@@ -26,6 +26,11 @@ class Button
   void update()
   {
     if (disabled) return;
+    if (techsOnline == 0)
+    {
+      state = 3;
+      return;
+    }
     
     if (mouseX > x && mouseX < x+w && mouseY > y && mouseY < y+h )
     {
@@ -169,6 +174,12 @@ class TechStatus
   void updateStatus(int newStatus)
   {
     this.status = newStatus;
+    updateTechsOnline();
+  }
+  
+  boolean isOnline()
+  {
+    return status != 0 && status != 1; 
   }
   
   void render(float x, float y, float w, float h)
@@ -178,7 +189,8 @@ class TechStatus
     rect(x, y, w, h, 20);
     
     // Name
-    fill(#000000);
+    if (isOnline()) fill(#000000);
+    else fill(#FF0000);
     textAlign(CENTER, BOTTOM);
     textSize(30);
     text(name, x + w*0.5, y + h);
@@ -188,6 +200,11 @@ class TechStatus
     {
       float wid = w * 0.57;
       shape(userIcon, x + (w - wid)/2, y + (h - wid)/2, wid, wid);
+    }
+    else if (status == 1)
+    {
+      float wid = w * 0.57;
+      shape(userGrayIcon, x + (w - wid)/2, y + (h - wid)/2, wid, wid);
     }
     
     if (status == 3)

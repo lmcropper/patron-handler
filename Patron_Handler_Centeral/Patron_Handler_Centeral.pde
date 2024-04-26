@@ -9,8 +9,19 @@ final int CALLING_CODE = 0xF6;
 import processing.serial.*; 
 Serial myPort;   
 boolean serialOn = true;
+boolean errorState = true;
 
-PShape userIcon, checkIcon, rejectIcon, callIcon;
+PShape userIcon, checkIcon, rejectIcon, callIcon, userGrayIcon;
+
+void updateTechsOnline()
+{
+  int online = 0;
+  for (TechStatus t : techs)
+  {
+    if (t.status != 0 && t.status != 1) online++;
+  }
+  techsOnline = online;
+}
 
 void setup()
 {
@@ -35,6 +46,7 @@ void setup()
   checkIcon = loadShape("circle-check-solid.svg");
   rejectIcon = loadShape("circle-xmark-solid.svg");
   callIcon = loadShape("phone-flip-solid.svg");
+  userGrayIcon = loadShape("user-solid-gray.svg");
   
   last_loop = millis();
   free_timer = 0;
@@ -107,10 +119,15 @@ void draw()
   
   // Draw Techs
   // Update Buttons
+  int visual_index = 0;
   for (int i = 0; i < techs.size(); i++)
   {
     TechStatus t = techs.get(i);
-    t.render(width*0.51 + (i%4)*150, height*0.44 + (i/4)*150, 140, 140);
+    if (t.status != 0) // Check if not in an error state
+    {
+      t.render(width*0.51 + (visual_index%4)*150, height*0.44 + (visual_index/4)*150, 140, 140);
+      visual_index++;
+    }
   }
   
   // Stats Bar
@@ -120,6 +137,15 @@ void draw()
   String stats = "Visits: ";
   stats += visits;
   text(stats, width*0.50 + 30, height - 30);
+  
+  // ERROR STATE
+  if (errorState)
+  {
+    fill(#FF0000);
+    textSize(100);
+    textAlign(CENTER, CENTER);
+    text("PLEASE RESET ESP32", width*0.5, height*0.5);
+  }
   
 }
 
@@ -159,12 +185,22 @@ void doSerialCommunication()
       if (byteBuffer[0] == 10)
       {
         // Update the displayed state of the tech card
+        if (byteBuffer[1] >= techs.size())
+        {
+          errorState = true;
+          return;
+        }
         techs.get(byteBuffer[1]).updateStatus(byteBuffer[2]);
+        print("Updating Shop Tech #");
+        print(byteBuffer[1]);
+        print(" to status ");
+        println(byteBuffer[2]);
       }
       else if (byteBuffer[0] == 20)
-      {
+      {`
         // Call operation terminated
         free_timer = 1000;
+        println("Unlocking front");
       }
       else if (byteBuffer[0] == 30)
       {
@@ -178,6 +214,10 @@ void doSerialCommunication()
         techs.add(new TechStatus(new String(name), byteBuffer[1]));
         techsOnline++;
       }
+      else if (byteBuffer[0] == 40)
+      {
+        errorState = false;
+      }
     }
   }
 }
@@ -190,6 +230,7 @@ void free_interface()
   }
   for (TechStatus t : techs)
   {
-    t.updateStatus(2);
+    if (t.status != 0 && t.status != 1)
+      t.updateStatus(2);
   }
 }
