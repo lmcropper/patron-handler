@@ -17,19 +17,20 @@
 #define PING_INTERVAL_MS   1000
 #define PING_TIMEOUT_MS    2000
 
-const int flash_pin = 14;
-const int conn_pin = 32;
-const int button_pin_1 = 27;
-const int button_pin_2 = 36;
+const int flash_pin = 17;
+const int conn_pin = 19;
+const int button_pin_1 = 23;
+const int button_pin_2 = 22;
 
 long prev_time;
 long last_ping, last_conn_attempt;
 bool flash_state; 
 
-bool paging = false;
+volatile bool paging = false;
 
 // Address of the system server
 uint8_t broadcastAddress[] =  {0x08, 0xD1, 0xF9, 0x35, 0x27, 0x14};
+//uint8_t broadcastAddress[] =  {0xA0, 0xA3, 0xB3, 0x2D, 0xC6, 0x2C};
 uint8_t myMacAddress[6];
 
 Button button_accept(button_pin_1);
@@ -48,7 +49,7 @@ void togglePaging()
 void setPaging(bool setting)
 {
   paging = setting;
-  if (!paging) digitalWrite(flash_pin, LOW);
+  digitalWrite(flash_pin, setting);
 }
 
 // Callback when data is sent
