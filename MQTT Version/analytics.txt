@@ -1,0 +1,5 @@
+{
+    "responses": 10,
+    "visits": 20,
+    "partys": 5
+}
