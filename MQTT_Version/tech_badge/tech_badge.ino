@@ -12,28 +12,29 @@ uniquely generated token that the broker uses to communicate with
 the client.
 */
 
-// Required libraries
+//Required libraries
 #include <ArduinoJson.h>
 #include <ArduinoJson.hpp>
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <Wire.h>
+#include <LiquidCrystal.h>
 #include "esp_now.h"
 #include "Button.h"
 
 
-// Debug defines
+//Debug defines
 #define DEBUG_WIFI
 #define DEBUG_CALLBACK
 #define DEBUG_COMMANDS
 
-// Client request ENUMS
+//Client request ENUMS
 #define COMMAND_REGISTER  0
 #define COMMAND_HEALTH    1
 #define COMMAND_PAGE      2
 #define COMMAND_CANCEL    3
 
-// Client response ENUMS
+//Client response ENUMS
 #define RESPONSE_NONE   0
 #define RESPONSE_ACCEPT 1
 #define RESPONSE_DENY   2
@@ -41,21 +42,23 @@ the client.
 //Badge properties
 #define CLIENT_NAME "YOUR_NAME_HERE" // Include your name
 
+//Flags for different commands
 bool pingHealth;
 bool clientRegistered;
+volatile bool paging = false;
 
 //MQTT connection variables/constants
 const char* mqtt_server = "10.2.117.37";
-
+ 
 #include <WiFi.h> //Wifi library
 #include "esp_wpa2.h" //wpa2 library for connections to Enterprise networks
 
 //Identity for user with password related to his realm (organization)
 //Available option of anonymous identity for federation of RADIUS servers or 1st Domain RADIUS servers
 #define EAP_ANONYMOUS_IDENTITY "anonymous@tuke.sk" //anonymous@example.com, or you can use also nickname@example.com
-#define EAP_IDENTITY "USERID@byu.edu" //nickname@example.com, at some organizations should work nickname only without realm, but it is not recommended
-#define EAP_PASSWORD "BYU_PASSWORD" //password for eduroam account
-#define EAP_USERNAME "USERID@byu.edu" // the Username is the same as the Identity in most eduroam networks.
+#define EAP_IDENTITY "lmc82@byu.edu" //nickname@example.com, at some organizations should work nickname only without realm, but it is not recommended
+#define EAP_PASSWORD "92V50g8m**" //password for eduroam account
+#define EAP_USERNAME "lmc82@byu.edu" // the Username is the same as the Identity in most eduroam networks.
 
 //SSID NAME
 const char* ssid = "eduroam"; // eduroam SSID
@@ -69,19 +72,30 @@ long lastMsg = 0;
 // esp32 hardware
 #define FLASH_RATE 100
 
+//Pin definitions
 const int flash_pin = 17;
 const int conn_pin = 19;
 const int button_pin_1 = 23;
 const int button_pin_2 = 22;
+const int vibrate_pin = 5;
+const int lcd_pin_d4 = 25;
+const int lcd_pin_d5 = 26;
+const int lcd_pin_d6 = 27;
+const int lcd_pin_d7 = 14;
+const int lcd_pin_rs = 32;
+const int lcd_pin_en = 33;
 
+//Housekeeping variables
 long prev_time;
 long last_ping, last_conn_attempt;
 bool flash_state; 
+char outLine[50];
 
-volatile bool paging = false;
-
+//Button objects
 Button button_accept(button_pin_1);
 Button button_refuse(button_pin_2);
+
+LiquidCrystal lcd(lcd_pin_rs, lcd_pin_en, lcd_pin_d4, lcd_pin_d5, lcd_pin_d6, lcd_pin_d7);
 
 void setPaging(bool setting)
 {
@@ -94,8 +108,9 @@ void setup_Wifi(){
     // We start by connecting to a WiFi network
   #ifdef DEBUG_WIFI
     Serial.println();
-    Serial.print("Connecting to ");
-    Serial.println(ssid);
+    sprintf(outLine, "Connecting to %s", ssid);
+    Serial.println(outLine);
+    lcd.print(outLine);
   #endif
 
   WiFi.disconnect(true);  //disconnect from WiFi to set new WiFi connection
@@ -132,7 +147,6 @@ void connect_mqttServer() {
       setup_Wifi();
     }
     
-
     //now attemt to connect to MQTT server
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
@@ -297,19 +311,22 @@ Initialize values and client functions.
 void setup() {
   delay(100);
   Serial.begin(115200);
+  lcd.begin(16, 2);
+  lcd.print("LCD TEST");
 
   setup_Wifi();
 
-  client.setServer(mqtt_server, 1883);
+  client.setServer(mqtt_server, 1883);  //Set IP and port for mqtt server
   
-  client.setCallback(callback);
+  client.setCallback(callback); //Set callback function to our defined function
 
-  //Setup default variables
+  //Setup default variables (flags)
   pingHealth = false;
   clientRegistered = false;
 
   pinMode(flash_pin, OUTPUT);
   pinMode(conn_pin, OUTPUT);
+  pinMode(vibrate_pin, OUTPUT);
   button_accept.begin();
   button_refuse.begin();
   
@@ -326,7 +343,7 @@ Handlles
 - visual feedback for paging (flashing LED)
 */
 void loop() {
-  
+  digitalWrite(vibrate_pin, LOW);
   if (!client.connected()) {
     connect_mqttServer();
   }
