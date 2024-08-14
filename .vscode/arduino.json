@@ -3,5 +3,6 @@
     "board": "esp32:esp32:esp32",
     "programmer": "esptool",
     "port": "COM10",
-    "sketch": "MQTT_Version\\tech_badge\\tech_badge.ino"
+    "sketch": "MQTT_Version\\tech_badge\\tech_badge.ino",
+    "output": "./build" 
 }

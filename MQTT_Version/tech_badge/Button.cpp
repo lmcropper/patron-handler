@@ -18,7 +18,7 @@ Button::Button(uint8_t pin)
 
 void Button::begin()
 {
-	pinMode(_pin, INPUT);
+	pinMode(_pin, INPUT_PULLUP);
 }
 
 // 

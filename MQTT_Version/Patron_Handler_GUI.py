@@ -39,35 +39,41 @@ class ClientGUI:
         #Define array to contain all of the registered pagers
         self.buttons = {}
 
-        # Create a frame for the buttons
+        #==============================================
+        ##### LEFT FRAME - PAGER LIST AND REQUEST #####
+        #==============================================
         self.left_frame = tk.Frame(self.root, width = 480, height = 1000, bg='grey')
         self.left_frame.grid(row=0, column=0, padx=10, pady=5)
         # self.left_frame.pack(side='left')
 
+        # Title - Patron Handler
         tk.Label(self.left_frame, text="Patron Handler", font=("default", FONT_SIZE_TITLE)).grid(row=0, column=0, padx=5, pady=5)
         
+        # Response Count
         self.response_label_number = tk.Label(self.left_frame, text = "Total Responses: 0", font=("default", FONT_SIZE_SUBTEXT))
         self.response_label_number.grid(row=1, column=0, padx=5, pady=5)
 
-        # Create a frame for storing the buttons
+        # Button Container - Pager List
         self.button_frame = tk.Frame(self.left_frame)
         self.button_frame.grid(row=2, column=0, padx=10, pady=5)
 
-        # Create a label 
+        # "No Help Available" - Don't show initially, call .grid() again to show
         self.response_label = tk.Label(self.left_frame, text="NO HELP AVAILABLE", font=("default", FONT_SIZE_TEXT))
         self.response_label.grid(row=3, column=0, padx=5, pady=5)
         self.response_label.grid_remove()
         self.displayingResponse = False
 
-        # Create a pager request button
+        # Pager request button
         self.pager_button = tk.Button(self.left_frame, text="Send Pager Request", command=self.send_pager_request, font=("default", FONT_SIZE_TEXT))
         self.pager_button.grid(row=4, column=0, padx=5, pady=5)
 
-        #Generate right frame
+        #==============================================
+        ##### RIGHT FRAME - TECH STATS #####
+        #==============================================
         self.right_frame = tk.Frame(self.root, bg='grey')
         self.right_frame.grid(row=0, column=1, padx=10, pady=5)
 
-        #Define GUI elements to show stats of registered pagers
+        # Title - Staff Details
         tk.Label(self.right_frame, text="Staff Details",font=("default", FONT_SIZE_TITLE)).grid(row=0,column=0,padx=5,pady=5)
 
         

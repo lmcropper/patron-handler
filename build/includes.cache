@@ -1,0 +1,172 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\cores\\esp32"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\variants\\esp32"
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Desktop\\Repos\\patron-handler\\build\\sketch\\tech_badge.ino.cpp",
+    "Include": "ArduinoJson.h",
+    "Includepath": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\ArduinoJson\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Desktop\\Repos\\patron-handler\\build\\sketch\\tech_badge.ino.cpp",
+    "Include": "WiFi.h",
+    "Includepath": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\libraries\\WiFi\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Desktop\\Repos\\patron-handler\\build\\sketch\\tech_badge.ino.cpp",
+    "Include": "PubSubClient.h",
+    "Includepath": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\PubSubClient\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Desktop\\Repos\\patron-handler\\build\\sketch\\tech_badge.ino.cpp",
+    "Include": "Wire.h",
+    "Includepath": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\libraries\\Wire\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Desktop\\Repos\\patron-handler\\build\\sketch\\tech_badge.ino.cpp",
+    "Include": "LiquidCrystal.h",
+    "Includepath": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\LiquidCrystal\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Desktop\\Repos\\patron-handler\\build\\sketch\\tech_badge.ino.cpp",
+    "Include": "SPI.h",
+    "Includepath": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\libraries\\SPI\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Desktop\\Repos\\patron-handler\\build\\sketch\\tech_badge.ino.cpp",
+    "Include": "Adafruit_GFX.h",
+    "Includepath": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\Adafruit_GFX_Library"
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Desktop\\Repos\\patron-handler\\build\\sketch\\tech_badge.ino.cpp",
+    "Include": "Adafruit_I2CDevice.h",
+    "Includepath": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\Adafruit_BusIO"
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Desktop\\Repos\\patron-handler\\build\\sketch\\tech_badge.ino.cpp",
+    "Include": "Adafruit_SSD1306.h",
+    "Includepath": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\Adafruit_SSD1306"
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Desktop\\Repos\\patron-handler\\build\\sketch\\tech_badge.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Desktop\\Repos\\patron-handler\\build\\sketch\\Button.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\libraries\\WiFi\\src\\WiFi.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\libraries\\WiFi\\src\\WiFiAP.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\libraries\\WiFi\\src\\WiFiClient.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\libraries\\WiFi\\src\\WiFiGeneric.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\libraries\\WiFi\\src\\WiFiMulti.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\libraries\\WiFi\\src\\WiFiSTA.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\libraries\\WiFi\\src\\WiFiScan.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\libraries\\WiFi\\src\\WiFiServer.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\libraries\\WiFi\\src\\WiFiUdp.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\PubSubClient\\src\\PubSubClient.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\libraries\\Wire\\src\\Wire.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\LiquidCrystal\\src\\LiquidCrystal.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.15\\libraries\\SPI\\src\\SPI.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\Adafruit_GFX_Library\\Adafruit_GFX.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\Adafruit_GFX_Library\\Adafruit_GrayOLED.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\Adafruit_GFX_Library\\Adafruit_SPITFT.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\Adafruit_GFX_Library\\glcdfont.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_BusIO_Register.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_I2CDevice.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_SPIDevice.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\logan\\Documents\\Arduino\\libraries\\Adafruit_SSD1306\\Adafruit_SSD1306.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]

@@ -19,8 +19,11 @@ the client.
 #include <PubSubClient.h>
 #include <Wire.h>
 #include <LiquidCrystal.h>
+#include <SPI.h>
 #include "esp_now.h"
 #include "Button.h"
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 
 //Debug defines
@@ -40,7 +43,7 @@ the client.
 #define RESPONSE_DENY   2
 
 //Badge properties
-#define CLIENT_NAME "YOUR_NAME_HERE" // Include your name
+#define CLIENT_NAME "Logan" // Include your name
 
 //Flags for different commands
 bool pingHealth;
@@ -73,17 +76,20 @@ long lastMsg = 0;
 #define FLASH_RATE 100
 
 //Pin definitions
-const int flash_pin = 17;
-const int conn_pin = 19;
-const int button_pin_1 = 23;
-const int button_pin_2 = 22;
-const int vibrate_pin = 5;
-const int lcd_pin_d4 = 25;
-const int lcd_pin_d5 = 26;
-const int lcd_pin_d6 = 27;
-const int lcd_pin_d7 = 14;
-const int lcd_pin_rs = 32;
-const int lcd_pin_en = 33;
+const int flash_pin = 16;
+const int conn_pin = 17;
+const int button_pin_1 = 18;
+const int button_pin_2 = 19;
+const int vibrate_pin = 25;
+
+
+//OLED display parameters
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 32 // OLED display height, in pixels
+#define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
+#define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
 
 //Housekeeping variables
 long prev_time;
@@ -95,7 +101,14 @@ char outLine[50];
 Button button_accept(button_pin_1);
 Button button_refuse(button_pin_2);
 
-LiquidCrystal lcd(lcd_pin_rs, lcd_pin_en, lcd_pin_d4, lcd_pin_d5, lcd_pin_d6, lcd_pin_d7);
+void display_message(char* message){
+  display.clearDisplay();
+  display.setTextSize(1);      // Normal 1:1 pixel scale
+  display.setTextColor(SSD1306_WHITE); // Draw white text
+  display.setCursor(0,0);     // Start at top-left corner
+  display.println(message);
+  display.display();
+}
 
 void setPaging(bool setting)
 {
@@ -109,8 +122,10 @@ void setup_Wifi(){
   #ifdef DEBUG_WIFI
     Serial.println();
     sprintf(outLine, "Connecting to %s", ssid);
+
+    display_message(outLine);
+
     Serial.println(outLine);
-    lcd.print(outLine);
   #endif
 
   WiFi.disconnect(true);  //disconnect from WiFi to set new WiFi connection
@@ -149,11 +164,13 @@ void connect_mqttServer() {
     
     //now attemt to connect to MQTT server
     Serial.print("Attempting MQTT connection...");
+    display_message("Attempting MQTT connection...");
     // Attempt to connect
     const char* clientID = badgeMACAddress.c_str();
     if (client.connect(clientID)) { // Change the name of client here if multiple ESP32 are connected. This should be a unique name.
       //attempt successful
       Serial.println("connected");
+      display_message("Connected");
       // Subscribe to topics here
       client.subscribe(clientID);
       client.subscribe("client/global");
@@ -184,6 +201,9 @@ void callback(char* topic, byte* message, unsigned int length) {
   Serial.print(topic);
   Serial.print(". Message: ");
   #endif
+  sprintf(outLine, "Message arrived on topic: %s", topic);
+  Serial.println(outLine);
+  display_message(outLine);
   String messageTemp;
   
   //Decoding the message
@@ -220,6 +240,7 @@ void callback(char* topic, byte* message, unsigned int length) {
       case COMMAND_PAGE:
         #ifdef DEBUG_CALLBACK
         Serial.println("Page request made by server");
+        display_message("Page request");
         #endif
         
         // Init Request
@@ -311,8 +332,23 @@ Initialize values and client functions.
 void setup() {
   delay(100);
   Serial.begin(115200);
-  lcd.begin(16, 2);
-  lcd.print("LCD TEST");
+
+  digitalWrite(conn_pin, LOW);
+  pinMode(flash_pin, OUTPUT);
+  pinMode(conn_pin, OUTPUT);
+  pinMode(vibrate_pin, OUTPUT);
+  button_accept.begin();
+  button_refuse.begin();
+
+  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); // Don't proceed, loop forever
+  }
+  display.clearDisplay();
+  display.display();
+  display.setTextSize(2); // Draw 2X-scale text
+  display.setTextColor(SSD1306_WHITE);
 
   setup_Wifi();
 
@@ -324,14 +360,7 @@ void setup() {
   pingHealth = false;
   clientRegistered = false;
 
-  pinMode(flash_pin, OUTPUT);
-  pinMode(conn_pin, OUTPUT);
-  pinMode(vibrate_pin, OUTPUT);
-  button_accept.begin();
-  button_refuse.begin();
-  
   flash_state = false;
-  digitalWrite(conn_pin, LOW);
   prev_time = millis();
 
 }
@@ -343,6 +372,7 @@ Handlles
 - visual feedback for paging (flashing LED)
 */
 void loop() {
+  Serial.println(button_accept.read());
   digitalWrite(vibrate_pin, LOW);
   if (!client.connected()) {
     connect_mqttServer();
@@ -370,6 +400,7 @@ void loop() {
     if (button_accept.pressed())
     {
       Serial.println("Accept");
+      display_message("Accept");
 
       StaticJsonDocument<80> doc;
       char output[80];
@@ -390,6 +421,7 @@ void loop() {
     if (button_refuse.pressed())
     {
       Serial.println("Refuse");
+      display_message("Refuse");
       StaticJsonDocument<80> doc;
       char output[80];
 
@@ -414,6 +446,7 @@ void loop() {
       prev_time = current_time;
       flash_state = !flash_state;
       digitalWrite(flash_pin, flash_state);
+      digitalWrite(vibrate_pin, flash_state);
     }
   }
 }
